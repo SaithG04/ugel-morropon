@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Configuración de codificación y vista responsiva -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evidencias</title>
+
+  <!-- Icono de pestaña -->
+    <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9XjlOIbP2bhAvRXIlxVplwf1ZHKec2Zhvw&s">
+  <!-- Bootstrap 5 para diseño responsive -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Iconos de Bootstrap --><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<div id="preview" class="table-responsive"></div>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/incidente.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estudiantes.css') }}" />
+</head>
+<body>
+    <!-- ░░░ BARRA DE NAVEGACIÓN SUPERIOR ░░░ -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4">
+  <a class="navbar-brand fw-bold" href="#">UGEL Morropón</a>
+
+  <!-- Opciones del menú de navegación -->
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav me-auto ms-4">
+      <!-- Dashboard -->
+      <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+      <!-- Incidentes -->
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('registro_incidente') }}"><i class="bi bi-exclamation-circle"></i> Incidentes</a></li>
+      <!-- Usuario -->
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('registro_login_usuarios') }}"><i class="bi bi-person-circle"></i> Usuario</a></li>
+      <!-- Instituciones (falta ruta) -->
+   <li class="nav-item">
+  <a class="nav-link" href="{{ url_for('instituciones_principal') }}"><i class="bi bi-building"></i> Instituciones</a>
+</li>
+      <!-- Estudiante (activo) -->
+      <li class="nav-item"><a class="nav-link active" href="{{ url_for('estudiante') }}"><i class="bi bi-person-circle"></i> Estudiante</a></li>
+      <!-- Evidencias (falta ruta) -->
+      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-card-image"></i> Evidencias</a></li>
+      
+    </ul>
+
+    <!-- Menú de usuario con avatar -->
+    <div class="dropdown">
+      <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- Avatar generado automáticamente con nombre y apellido -->
+        <img src="https://ui-avatars.com/api/?name={{ session['usuario']['nombre'] }}+{{ session['usuario']['apellido'] }}" class="rounded-circle" width="35" height="35" alt="Usuario">
+      </a>
+      <!-- Opciones del dropdown -->
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+        <li><h6 class="dropdown-header">{{ session['usuario']['nombre'] }} {{ session['usuario']['apellido'] }}</h6></li>
+        <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<select id="selectInstitucion" class="form-select w-50 mb-4">
+  <option value="">-- Todas las instituciones --</option>
+  {% for inst in instituciones %}
+  <option value="{{ inst['institucion'] }}">{{ inst['institucion'] }}</option>
+{% endfor %}
+</select>
+
+<div id="preview" class="table-responsive"></div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectInstitucion = document.getElementById("selectInstitucion");
+    const preview = document.getElementById("preview");
+
+    selectInstitucion.addEventListener("change", () => {
+      const institucion = selectInstitucion.value;
+
+      fetch("/api/evidencias", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ institucion }),
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Error al obtener evidencias.");
+        return response.json();
+      })
+      .then(data => {
+        if (data.length === 0) {
+          preview.innerHTML = `<div class="alert alert-warning">No hay evidencias registradas para esta institución.</div>`;
+        } else {
+          let html = `
+            <table class="table table-bordered table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>Estudiante</th>
+                  <th>Motivo</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Estado</th>
+                  <th>Institución</th>
+                  <th>Evidencia</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+          data.forEach(row => {
+            html += `
+              <tr>
+                <td>${row.nombre_estudiante}</td>
+                <td>${row.motivo}</td>
+                <td>${row.fecha}</td>
+                <td>${row.hora}</td>
+                <td>${row.estado}</td>
+                <td>${row.institucion}</td>
+                <td>
+                  ${row.evidencia ? `<a href="${row.evidencia}" target="_blank">Ver imagen</a>` : "No hay"}
+                </td>
+              </tr>
+            `;
+          });
+          html += "</tbody></table>";
+          preview.innerHTML = html;
+        }
+      })
+      .catch(error => {
+        preview.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+      });
+    });
+  });
+</script>

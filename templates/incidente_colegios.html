@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Configuración básica -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registrar Incidente</title>
+
+  <!-- Bootstrap 5: Estilos base -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons: Íconos como bi-exclamation-circle, etc. -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Script externo para alternar entre formularios -->
+<script src="{{ url_for('static', filename='js/incidente_colegios.js') }}" defer></script>
+
+  <!-- Script para lógica general del dashboard -->
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+
+  <!-- CSS personalizado del formulario de incidentes -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/incidente.css') }}" />
+</head>
+<body>
+
+<!-- ░░░ BARRA DE NAVEGACIÓN SUPERIOR ░░░ -->
+<nav class="navbar navbar-expand-lg navbar-light border-bottom px-4">
+  <a class="navbar-brand" href="#">UGEL Morropón</a>
+
+  <!-- Menú de navegación -->
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav me-auto ms-4">
+      <!-- Enlace a Dashboard -->
+      <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('dashboard_colegios') }}">
+          <i class="bi bi-grid-1x2"></i> Dashboard
+        </a>
+      </li>
+      <!-- Enlace a Incidentes -->
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('incidente_colegios') }}">
+          <i class="bi bi-exclamation-circle"></i> Incidentes
+        </a>
+      </li>
+      <!-- Enlace a Estudiantes -->
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('estudiantes_colegios') }}">
+          <i class="bi bi-building"></i> Estudiantes
+        </a>
+      </li>
+    </ul>
+
+    <!-- Dropdown del usuario logueado -->
+    <div class="d-flex align-items-center">
+      <div class="dropdown">
+        <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+          <!-- Avatar generado con las iniciales del usuario -->
+          <img src="https://ui-avatars.com/api/?name={{ session['usuario']['nombre'] }}+{{ session['usuario']['apellido'] }}" class="rounded-circle" width="35" height="35" alt="Usuario">
+        </a>
+        <!-- Opciones del usuario -->
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+          <li><h6 class="dropdown-header">{{ session['usuario']['nombre'] }} {{ session['usuario']['apellido'] }}</h6></li>
+          <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ░░░ CONTENIDO PRINCIPAL ░░░ -->
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white">
+      <h5 class="mb-0"><i class="bi bi-exclamation-circle me-2"></i> Registrar Incidente</h5>
+    </div>
+    
+    <div class="card-body">
+
+      <!-- Selector del tipo de incidente -->
+      <div class="mb-4">
+        <label for="tipo" class="form-label">Tipo de incidente</label>
+        <select class="form-select" id="tipo" required>
+          <option selected disabled value="">Seleccionar...</option>
+          <option value="incidencia">Académico</option>
+          <option value="infraestructura">Infraestructura</option>
+        </select>
+      </div>
+
+      <!-- ░░░ FORMULARIO DE INCIDENTE ACADÉMICO ░░░ -->
+      <form id="form-incidencia" action="/guardar_incidente" method="POST" enctype="multipart/form-data" class="d-none">
+        <div class="mb-3">
+          <label class="form-label">Nombre del Estudiante</label>
+          <input type="text" class="form-control" name="nombre_estudiante" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descripción del Incidente</label>
+          <textarea class="form-control" name="motivo" rows="3" required></textarea>
+        </div>
+        <div class="mb-3 row">
+          <div class="col-md-6">
+            <label class="form-label">Fecha</label>
+            <input type="date" class="form-control" name="fecha" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Hora</label>
+            <input type="time" class="form-control" name="hora" required />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Estado</label>
+          <select class="form-select" name="estado" required>
+            <option disabled selected value="">Seleccionar estado...</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En proceso">En proceso</option>
+            <option value="Resuelto">Resuelto</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Cargar Evidencia (PNG o JPG)</label>
+          <input type="file" class="form-control" name="evidencia" accept=".png, .jpg, .jpeg" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Guardar Incidente
+        </button>
+      </form>
+
+      <!-- ░░░ FORMULARIO DE INCIDENTE DE INFRAESTRUCTURA ░░░ -->
+      <form id="form-infraestructura" action="/guardar_infraestructura" method="POST" enctype="multipart/form-data" class="d-none">
+        <div class="mb-3">
+          <label class="form-label">Tipo de Problema</label>
+          <select class="form-select" name="problema" required>
+            <option disabled selected value="">Seleccionar...</option>
+            <option value="Electricidad">Electricidad</option>
+            <option value="Agua">Agua</option>
+            <option value="Internet">Internet</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descripción del Problema</label>
+          <textarea class="form-control" name="descripcion_problema" rows="3" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Adjuntar Imagen</label>
+          <input type="file" class="form-control" name="imagen_problema" accept=".png, .jpg, .jpeg" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Seguimiento</label>
+          <textarea class="form-control" name="seguimiento" rows="2" placeholder="Opcional..."></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Estado</label>
+          <select class="form-select" name="estado" required>
+            <option disabled selected value="">Seleccionar estado...</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En proceso">En proceso</option>
+            <option value="Resuelto">Resuelto</option>
+          </select>
+        </div>
+        <!-- Checkbox para generar alerta -->
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" name="alerta" id="alerta" />
+          <label class="form-check-label" for="alerta">Generar alerta de incidente</label>
+        </div>
+        <button type="submit" class="btn btn-danger">
+          <i class="bi bi-send-exclamation"></i> Reportar Infraestructura
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ░░░ BOOTSTRAP Y SCRIPT FINAL ░░░ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/incidente_colegios.js') }}" defer></script>
+
+</body>
+</html>

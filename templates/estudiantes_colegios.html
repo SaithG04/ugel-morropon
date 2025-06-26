@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Codificación y configuración responsive -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estudiantes</title>
+
+  <!-- Bootstrap 5 para diseño responsive y estilos base -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Iconos de Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Estilos personalizados para estudiantes -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estudiantes.css') }}" />
+</head>
+
+<body>
+
+<!-- ░░░ BARRA DE NAVEGACIÓN ░░░ -->
+<nav class="navbar navbar-expand-lg navbar-light border-bottom px-4">
+  <!-- Título o nombre del sistema -->
+  <a class="navbar-brand" href="#">UGEL Morropón</a>
+
+  <!-- Menú de navegación colapsable -->
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav me-auto ms-4">
+      <!-- Opción de Dashboard -->
+      <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('dashboard_colegios') }}">
+          <i class="bi bi-grid-1x2"></i> Dashboard
+        </a>
+      </li>
+
+      <!-- Opción de Incidentes -->
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('incidente_colegios') }}">
+          <i class="bi bi-exclamation-circle"></i> Incidentes
+        </a>
+      </li>
+
+      <!-- Opción de Estudiantes (activo) -->
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('estudiantes_colegios') }}">
+          <i class="bi bi-building"></i> Estudiantes
+        </a>
+      </li>
+    </ul>
+
+    <!-- Usuario logueado (menú desplegable con avatar) -->
+    <div class="d-flex align-items-center">
+      <div class="dropdown">
+        <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+          <!-- Avatar generado automáticamente con nombre y apellido -->
+          <img src="https://ui-avatars.com/api/?name={{ session['usuario']['nombre'] }}+{{ session['usuario']['apellido'] }}" class="rounded-circle" width="35" height="35" alt="Usuario">
+        </a>
+        <!-- Opciones del dropdown -->
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+          <li><h6 class="dropdown-header">{{ session['usuario']['nombre'] }} {{ session['usuario']['apellido'] }}</h6></li>
+          <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ░░░ CONTENIDO PRINCIPAL ░░░ -->
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <!-- Cabecera del módulo -->
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-mortarboard-fill me-2"></i> Estudiantes</h5>
+    </div>
+
+    <!-- Cuerpo del módulo -->
+    <div class="card-body">
+
+      <!-- Subida de archivo Excel -->
+      <div class="mb-3">
+        <label for="importarArchivo" class="form-label">Importar archivo Excel</label>
+        <!-- Solo se permite archivos .xlsx -->
+        <input type="file" class="form-control" id="importarArchivo" accept=".xlsx">
+      </div>
+
+      <!-- Botón para exportar datos a Excel -->
+      <div class="mb-3">
+        <button class="btn btn-success" onclick="exportarExcel()">
+          <i class="bi bi-file-earmark-arrow-down"></i> Exportar a Excel
+        </button>
+      </div>
+
+      <!-- Aquí se mostrará una tabla de vista previa de los datos del Excel -->
+      <div id="preview" class="table-responsive"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ░░░ LIBRERÍAS Y SCRIPTS ░░░ -->
+
+<!-- Librería XLSX para leer y escribir archivos Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Script personalizado con la lógica de importación/exportación -->
+<script src="{{ url_for('static', filename='js/estudiantes.js') }}" defer></script>
+
+<!-- JS de Bootstrap para menús, dropdowns, etc. -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

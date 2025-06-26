@@ -1,0 +1,79 @@
+body {
+    background-color: #f0f2f5; /* Lighter, more modern background */
+    font-family: 'Roboto', sans-serif; /* A more professional and legible font */
+    color: #34495e; /* Darker, sophisticated text color */
+}
+
+/* Tarjetas de métricas */
+.metric-card {
+    background-color: #ffffff;
+    border-radius: 12px; /* Slightly softer corners */
+    border-left: 5px solid #2874a6; /* Deep professional blue */
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); /* More pronounced, softer shadow */
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px); /* More noticeable lift on hover */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); /* Stronger shadow on hover */
+}
+
+.metric-card h4 {
+    font-weight: 700; /* Bolder for impact */
+    color: #2874a6; /* Matching the border color */
+    margin-bottom: 0.6rem; /* Slightly more space */
+}
+
+.metric-card p {
+    font-size: 15px; /* Slightly larger for readability */
+    color: #5d6d7e; /* Softer gray for paragraph text */
+}
+
+/* Gráficos */
+#graficoIncidentes,
+#graficoPorcentaje {
+    max-width: 100%;
+    height: auto;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+    max-height: 250px; /* Slightly increased max height for graphs */
+    border-radius: 8px; /* Soften edges of the canvas */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for graphs */
+}
+
+/* Cuadro de incidente reciente */
+.incident-box {
+    padding: 1.2rem; /* Slightly more padding */
+    background-color: #fdf6e3; /* Softer, muted yellow background */
+    border-left: 4px solid #f39c12; /* Professional, rich orange for incidents */
+    border-radius: 10px;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.06); /* Slightly more prominent shadow */
+    color: #7d6608; /* Darker text for readability against light yellow */
+}
+
+/* Navbar personalizado */
+.navbar-nav .nav-link {
+    font-weight: 500;
+    color: #566573; /* Muted dark gray for nav links */
+    transition: color 0.2s ease, transform 0.2s ease; /* Add transform for subtle hover */
+}
+
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link:hover {
+    color: #2874a6; /* Deep blue for active/hover state */
+    transform: translateY(-2px); /* Subtle lift on hover */
+}
+
+/* Encabezado de tarjetas */
+.card-header {
+    border-bottom: 1px solid #e1e4e8; /* Lighter border for card header */
+    background-color: #ffffff;
+    font-weight: 600;
+    font-size: 17px; /* Slightly larger font size */
+    color: #34495e; /* Matching body text color */
+    padding: 1rem 1.5rem; /* Add some padding for better spacing */
+}

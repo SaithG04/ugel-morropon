@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Codificación del documento y vista adaptable -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Registro de Usuario</title>
+  <!-- Icono de pestaña -->
+    <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9XjlOIbP2bhAvRXIlxVplwf1ZHKec2Zhvw&s">
+  <!-- Estilos de Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Iconos de Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- CSS personalizado (dashboard e incidentes) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/incidente.css') }}" />
+</head>
+
+<body>
+
+<!-- ░░░ NAVBAR ░░░ -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4">
+  <!-- Nombre de la organización -->
+  <a class="navbar-brand fw-bold" href="#">UGEL Morropón</a>
+
+  <div class="collapse navbar-collapse">
+    <!-- Enlaces de navegación -->
+    <ul class="navbar-nav me-auto ms-4">
+      <li class="nav-item">
+        <a class="nav-link" href="/dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('registro_incidente') }}"><i class="bi bi-exclamation-circle"></i> Incidentes</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('registro_login_usuarios') }}"><i class="bi bi-person-circle"></i> Usuario</a>
+      </li>
+     <li class="nav-item">
+  <a class="nav-link" href="{{ url_for('instituciones_principal') }}">
+    <i class="bi bi-building"></i> Instituciones
+  </a>
+</li>
+      <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('estudiante') }}"><i class="bi bi-person-circle"></i> Estudiante</a>
+      </li>
+              <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('evidencias') }}">    <i class="bi bi-card-image"></i> Evidencias
+  </a>
+</li>
+    </ul>
+
+    <!-- Dropdown de usuario logueado -->
+    <div class="dropdown">
+      <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- Avatar dinámico usando iniciales del usuario -->
+        <img src="https://ui-avatars.com/api/?name={{ session['usuario']['nombre'] }}+{{ session['usuario']['apellido'] }}" class="rounded-circle" width="35" height="35" alt="Usuario">
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+        <li><h6 class="dropdown-header">{{ session['usuario']['nombre'] }} {{ session['usuario']['apellido'] }}</h6></li>
+        <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ░░░ CONTENIDO PRINCIPAL ░░░ -->
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <!-- Título del formulario -->
+    <div class="card-header bg-white">
+      <h5 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Registro de Usuario</h5>
+    </div>
+
+    <div class="card-body">
+
+      <!-- MENSAJES FLASH (éxito o error) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- ░░░ FORMULARIO DE REGISTRO ░░░ -->
+      <form action="{{ url_for('registro_login_usuarios') }}" method="POST">
+        
+        <!-- Campo: Nombre -->
+        <div class="mb-3">
+          <label for="nombre" class="form-label">Nombre</label>
+          <input type="text" class="form-control" id="nombre" name="nombre" required />
+        </div>
+
+        <!-- Campo: Apellido -->
+        <div class="mb-3">
+          <label for="apellido" class="form-label">Apellido</label>
+          <input type="text" class="form-control" id="apellido" name="apellido" required />
+        </div>
+
+        <!-- Campo: DNI -->
+        <div class="mb-3">
+          <label for="dni" class="form-label">DNI</label>
+          <input type="text" class="form-control" id="dni" name="dni" pattern="[0-9]{8}" title="Ingrese 8 dígitos" required />
+        </div>
+
+        <!-- Campo: Teléfono -->
+        <div class="mb-3">
+          <label for="telefono" class="form-label">Teléfono</label>
+          <input type="tel" class="form-control" id="telefono" name="telefono" pattern="[0-9]{9}" title="Ingrese 9 dígitos" required />
+        </div>
+
+        <!-- Campo: Correo electrónico -->
+        <div class="mb-3">
+          <label for="correo" class="form-label">Correo electrónico</label>
+          <input type="email" class="form-control" id="correo" name="correo" required />
+        </div>
+
+        <!-- Campo: Institución -->
+        <div class="mb-3">
+          <label for="institucion" class="form-label">Institución</label>
+          <input type="text" class="form-control" id="institucion" name="institucion" required />
+        </div>
+
+        <!-- Campo: Clave (solo lectura, generada automáticamente) -->
+        <div class="mb-3">
+          <label for="clave" class="form-label">Clave generada</label>
+          <input type="text" class="form-control" id="clave" name="clave" readonly />
+        </div>
+
+        <!-- Botón de envío -->
+        <div class="d-flex justify-content-between mt-4">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Registrarse</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts de Bootstrap (JS + Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script personalizado para generación de clave -->
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+
+</body>
+</html>

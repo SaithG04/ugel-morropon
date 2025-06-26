@@ -1,0 +1,89 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                      url("https://static.vecteezy.com/system/resources/previews/015/132/105/non_2x/green-yellow-background-vector-art-graphics-for-free-wallpaper-free-photo.jpg");
+    background-size: cover;
+    background-position: center;
+    font-family: 'Segoe UI', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Caja de Login */
+.login-box {
+    background: #ffffffee;
+    padding: 45px 35px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    max-width: 420px;
+    width: 100%;
+    border-left: 6px solid #27ae60; /* Verde institucional */
+    border-top: 3px solid #f4d03f;  /* Amarillo institucional */
+}
+
+/* Título */
+.login-box h2 {
+    text-align: center;
+    margin-bottom: 28px;
+    color: #27ae60;
+    font-weight: bold;
+    font-size: 26px;
+}
+
+/* Campos de entrada */
+.login-box .form-control {
+    border-radius: 10px;
+    padding-left: 40px;
+    border: 1px solid #ccc;
+    height: 42px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    transition: border-color 0.3s ease;
+}
+
+.login-box .form-control:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+}
+
+/* Botón */
+.login-box .btn {
+    border-radius: 10px;
+    font-weight: bold;
+    background-color: #f4d03f;
+    color: #000;
+    border: none;
+    padding: 10px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login-box .btn:hover {
+    background-color: #f1c40f;
+    transform: scale(1.03);
+}
+
+/* Texto inferior */
+.footer-text {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 20px;
+    color: #555;
+}
+
+/* Íconos en campos */
+.form-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 16px;
+}
+
+/* Grupo con ícono */
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}

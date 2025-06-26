@@ -1,0 +1,82 @@
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow-lg rounded-4 border-0">
+      <form id="formEditarUsuario" class="needs-validation" novalidate>
+        <div class="modal-header bg-gradient text-white" style="background: linear-gradient(45deg, #0d6efd, #6610f2);">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="modalEditarUsuarioLabel">
+            <i class="bi bi-pencil-square"></i> Editar Usuario
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body bg-light rounded-bottom px-4 py-3">
+          <input type="hidden" name="id" value="{{ usuario.id }}">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nombre</label>
+              <input type="text" name="nombre" class="form-control" value="{{ usuario.nombre }}" required>
+              <div class="invalid-feedback">Por favor ingresa el nombre.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Apellido</label>
+              <input type="text" name="apellido" class="form-control" value="{{ usuario.apellido }}" required>
+              <div class="invalid-feedback">Por favor ingresa el apellido.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">DNI</label>
+              <input type="text" name="dni" class="form-control" value="{{ usuario.dni }}" required pattern="[0-9]{8}">
+              <div class="invalid-feedback">Ingresa un DNI válido de 8 dígitos.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Teléfono</label>
+              <input type="text" name="telefono" class="form-control" value="{{ usuario.telefono }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Correo Electrónico</label>
+              <input type="email" name="correo_electronico" class="form-control" value="{{ usuario.correo_electronico }}" required>
+              <div class="invalid-feedback">Ingresa un correo válido.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Institución</label>
+              <input type="text" name="institucion" class="form-control" value="{{ usuario.institucion }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Clave</label>
+              <input type="text" name="clave" class="form-control" value="{{ usuario.clave }}">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-white border-0 rounded-bottom">
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-check-circle me-1"></i> Actualizar
+          </button>
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Validación bootstrap al enviar el formulario
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("formEditarUsuario");
+  form.addEventListener("submit", function (event) {
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    form.classList.add("was-validated");
+  }, false);
+});
+</script>
