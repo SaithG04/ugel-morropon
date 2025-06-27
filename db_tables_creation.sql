@@ -40,4 +40,4 @@ CREATE TABLE registro_infraestructura (
 
 -- Inserting a default user
 INSERT INTO usuarios (nombre, apellido, dni, telefono, correo_electronico, institucion, clave)
-VALUES ('Admin', 'Default', '12345678', '987654321', 'admin@ugel.com', 'UGEL Admin', 'admin123');
+VALUES ('Admin', 'Default', '12345678', '987654321', 'admin@gmail.com', 'UGEL Admin', 'priuge450');
