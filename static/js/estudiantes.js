@@ -1,4 +1,3 @@
-// static/js/estudiantes.js
 // Espera que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', () => {
   

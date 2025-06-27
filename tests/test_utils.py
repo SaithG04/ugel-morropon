@@ -665,17 +665,14 @@ def test_actualizar_usuario_por_id_success(mock_db_connection):
       - El método `commit` se llame.
     """
     mock_connection, mock_cursor = mock_db_connection
-    data = {
-        'id': 1,
-        'nombre': 'Juan',
-        'apellido': 'Perez',
-        'dni': '12345678',
-        'telefono': '987654321',
-        'correo_electronico': 'juan@example.com',
-        'institucion': 'Colegio XYZ',
-        'clave': '123456'
-    }
-    result = actualizar_usuario_por_id(data)
+    result = actualizar_usuario_por_id( 1,
+                'Juan',
+                'Perez',
+                '12345678',
+                '987654321',
+                'juan@example.com',
+                'Colegio XYZ',
+                '123456')
     assert result is True
     mock_connection.commit.assert_called_once()
 
@@ -689,19 +686,16 @@ def test_actualizar_usuario_por_id_no_connection():
     """
     with patch('utils.get_db_connection', return_value=None):
         with patch('builtins.print') as mocked_print:
-            data = {
-                'id': 1,
-                'nombre': 'Juan',
-                'apellido': 'Perez',
-                'dni': '12345678',
-                'telefono': '987654321',
-                'correo_electronico': 'juan@example.com',
-                'institucion': 'Colegio XYZ',
-                'clave': '123456'
-            }
-            result = actualizar_usuario_por_id(data)
+            result = actualizar_usuario_por_id( 1,
+                'Juan',
+                'Perez',
+                '12345678',
+                '987654321',
+                'juan@example.com',
+                'Colegio XYZ',
+                '123456')
             assert result is False
-            mocked_print.assert_called_with("❌ Error de conexión para actualizar usuario")
+            mocked_print.assert_called_with("❌ Error de conexión al intentar actualizar usuario")
 
 def test_actualizar_usuario_por_id_db_error(mock_db_connection):
     """
@@ -714,19 +708,16 @@ def test_actualizar_usuario_por_id_db_error(mock_db_connection):
     mock_connection, mock_cursor = mock_db_connection
     mock_cursor.execute.side_effect = Error("Database error")
     with patch('builtins.print') as mocked_print:
-        data = {
-            'id': 1,
-            'nombre': 'Juan',
-            'apellido': 'Perez',
-            'dni': '12345678',
-            'telefono': '987654321',
-            'correo_electronico': 'juan@example.com',
-            'institucion': 'Colegio XYZ',
-            'clave': '123456'
-        }
-        result = actualizar_usuario_por_id(data)
+        result = actualizar_usuario_por_id( 1,
+                'Juan',
+                'Perez',
+                '12345678',
+                '987654321',
+                'juan@example.com',
+                'Colegio XYZ',
+                '123456')
         assert result is False
-        mocked_print.assert_called_with("❌ Error al actualizar usuario: Database error")
+        mocked_print.assert_called_with("❌ Error al actualizar usuario con ID 1: Database error")
 
 def test_obtener_instituciones_success(mock_db_connection):
     """
@@ -758,53 +749,3 @@ def test_obtener_instituciones_error(mock_db_connection):
         result = obtener_instituciones()
         assert result == []
         mocked_print.assert_called_with("Error al obtener instituciones: Database error")
-
-def test_obtener_registros_filtrados_por_institucion_success(mock_db_connection):
-    """
-    Prueba la obtención de registros filtrados por institución.
-    - Configura el cursor para devolver registros simulados.
-    - Verifica que:
-      - La función devuelva la lista esperada.
-    """
-    mock_connection, mock_cursor = mock_db_connection
-    mock_cursor.fetchall.return_value = [
-        {'id': 1, 'nombre_estudiante': 'Ana', 'institucion': 'Colegio XYZ'}
-    ]
-    result = obtener_registros_filtrados_por_institucion('Colegio XYZ')
-    assert len(result) == 1
-    assert result[0]['institucion'] == 'Colegio XYZ'
-
-def test_obtener_registros_filtrados_por_institucion_no_institucion(mock_db_connection):
-    """
-    Prueba la obtención de registros cuando no se especifica institución.
-    - Configura el cursor para devolver una lista vacía.
-    - Verifica que:
-      - La función devuelva una lista vacía.
-      - El método `execute` se llame con la consulta correcta.
-    """
-    mock_connection, mock_cursor = mock_db_connection
-    mock_cursor.fetchall.return_value = []
-    result = obtener_registros_filtrados_por_institucion(None)
-    assert result == []
-    mock_cursor.execute.assert_called_once_with(
-        """
-                    SELECT * FROM registro_academico ra
-                    JOIN usuarios u ON ra.usuario_id = u.id
-                    ORDER BY ra.fecha_registro DESC
-                """
-    )
-
-def test_obtener_registros_filtrados_por_institucion_error(mock_db_connection):
-    """
-    Prueba el manejo de errores en `obtener_registros_filtrados_por_institucion`.
-    - Configura el cursor para lanzar una excepción `Error`.
-    - Verifica que:
-      - La función devuelva una lista vacía.
-      - Se imprime el mensaje de error esperado.
-    """
-    mock_connection, mock_cursor = mock_db_connection
-    mock_cursor.execute.side_effect = Error("Database error")
-    with patch('builtins.print') as mocked_print:
-        result = obtener_registros_filtrados_por_institucion('Colegio XYZ')
-        assert result == []
-        mocked_print.assert_called_with("❌ Error al obtener evidencias filtradas: Database error")

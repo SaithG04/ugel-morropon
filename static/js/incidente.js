@@ -1,4 +1,3 @@
-// static/js/incidente.js
 // Espera a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', () => {
   // Referencias a los elementos HTML

@@ -1,4 +1,3 @@
-// static/js/instituciones_principal.js
 let idUsuarioAEliminar = null;
 
 document.addEventListener("DOMContentLoaded", () => {

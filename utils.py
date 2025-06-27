@@ -1,4 +1,3 @@
-# utils.py
 import datetime
 from flask import session
 import mysql.connector
@@ -12,8 +11,7 @@ def get_db_connection():
             host='localhost',
             user='root',
             password='',
-            database='ugel',
-            port=3375
+            database='ugel'
         )
         if connection.is_connected():
             return connection
@@ -334,44 +332,6 @@ def eliminar_usuario_por_id(usuario_id):
     else:
         print("❌ Error de conexión al intentar eliminar usuario")
         return False
-def actualizar_usuario_por_id(data):
-    conexion = get_db_connection()
-    if conexion:
-        try:
-            cursor = conexion.cursor()
-            query = """
-                UPDATE usuarios SET
-                    nombre = %s,
-                    apellido = %s,
-                    dni = %s,
-                    telefono = %s,
-                    correo_electronico = %s,
-                    institucion = %s,
-                    clave = %s
-                WHERE id = %s
-            """
-            valores = (
-                data["nombre"],
-                data["apellido"],
-                data["dni"],
-                data["telefono"],
-                data["correo_electronico"],
-                data["institucion"],
-                data["clave"],
-                data["id"]
-            )
-            cursor.execute(query, valores)
-            conexion.commit()
-            return True
-        except Error as e:
-            print(f"❌ Error al actualizar usuario: {e}")
-            return False
-        finally:
-            cursor.close()
-            conexion.close()
-    else:
-        print("❌ Error de conexión para actualizar usuario")
-        return False
 
 def obtener_instituciones():
     try:
@@ -388,27 +348,115 @@ def obtener_instituciones():
         conn.close()
 
 def obtener_registros_filtrados_por_institucion(institucion):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if institucion:
+        query = """
+        SELECT 
+            r.nombre_estudiante,
+            r.motivo,
+            r.fecha,
+            r.hora,
+            r.estado,
+            u.institucion,
+            r.evidencia
+        FROM registro_academico r
+        JOIN usuarios u ON r.usuario_id = u.id
+        WHERE u.institucion = %s
+        """
+        cursor.execute(query, (institucion,))
+    else:
+        query = """
+        SELECT 
+            r.nombre_estudiante,
+            r.motivo,
+            r.fecha,
+            r.hora,
+            r.estado,
+            u.institucion,
+            r.evidencia
+        FROM registro_academico r
+        JOIN usuarios u ON r.usuario_id = u.id
+        """
+        cursor.execute(query)
+
+    resultados = cursor.fetchall()
+    conn.close()
+    return resultados
+
+def actualizar_usuario_por_id(usuario_id, nombre, apellido, dni, telefono, correo, institucion, clave):
     conexion = get_db_connection()
     if conexion:
         try:
-            cursor = conexion.cursor(dictionary=True)
-            if institucion:
-                cursor.execute("""
-                    SELECT * FROM registro_academico ra
-                    JOIN usuarios u ON ra.usuario_id = u.id
-                    WHERE u.institucion = %s
-                    ORDER BY ra.fecha_registro DESC
-                """, (institucion,))
-            else:
-                cursor.execute("""
-                    SELECT * FROM registro_academico ra
-                    JOIN usuarios u ON ra.usuario_id = u.id
-                    ORDER BY ra.fecha_registro DESC
-                """)
-            return cursor.fetchall()
+            cursor = conexion.cursor()
+            sql = '''
+                UPDATE usuarios 
+                SET nombre = %s, apellido = %s, dni = %s, telefono = %s, 
+                    correo_electronico = %s, institucion = %s, clave = %s
+                WHERE id = %s
+            '''
+            cursor.execute(sql, (nombre, apellido, dni, telefono, correo, institucion, clave, usuario_id))
+            conexion.commit()
+            return True
         except Error as e:
-            print("❌ Error al obtener evidencias filtradas: " + e.msg)
+            print(f"❌ Error al actualizar usuario con ID {usuario_id}: {e}")
+            return False
         finally:
             cursor.close()
             conexion.close()
-    return []
+    else:
+        print("❌ Error de conexión al intentar actualizar usuario")
+        return False
+def obtener_incidente_por_nombre(tipo, nombre_institucion):
+    conexion = get_db_connection()
+    if not conexion:
+        return None
+
+    try:
+        cursor = conexion.cursor(dictionary=True)
+
+        if tipo.lower() in ['académico', 'academico']:
+            query = """
+                SELECT 
+                    u.institucion, 
+                    CONCAT(u.nombre, ' ', u.apellido) AS registrado_por,
+                    u.correo_electronico AS correo, 
+                    u.telefono AS telefono,
+                    ra.estado, 
+                    'Académico' AS tipo,
+                    ra.motivo AS descripcion
+                FROM registro_academico ra
+                LEFT JOIN usuarios u ON ra.usuario_id = u.id
+                WHERE u.institucion = %s
+                ORDER BY ra.fecha_registro DESC
+                LIMIT 1
+            """
+        else:
+            query = """
+                SELECT 
+                    u.institucion, 
+                    CONCAT(u.nombre, ' ', u.apellido) AS registrado_por,
+                    u.correo_electronico AS correo, 
+                    u.telefono AS telefono,
+                    ri.estado, 
+                    'Infraestructura' AS tipo,
+                    ri.descripcion_problema AS descripcion
+                FROM registro_infraestructura ri
+                LEFT JOIN usuarios u ON ri.usuario_id = u.id
+                WHERE u.institucion = %s
+                ORDER BY ri.fecha_registro DESC
+                LIMIT 1
+            """
+
+        cursor.execute(query, (nombre_institucion,))
+        resultado = cursor.fetchone()
+        return resultado
+
+    except Exception as e:
+        print(f"❌ Error al obtener incidente por nombre: {e}")
+        return None
+
+    finally:
+        cursor.close()
+        conexion.close()

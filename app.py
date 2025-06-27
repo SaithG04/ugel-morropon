@@ -1,13 +1,12 @@
-# app.py
-# ==== IMPORTACIÓN DE MÓDULOS ====
-import os  # Permite trabajar con archivos, rutas y variables de entorno
-from flask import Flask, jsonify, render_template, request, flash, redirect, session, url_for  # Funciones del framework Flask
-import mysql.connector # Cliente para conectar a MySQL
-from werkzeug.utils import secure_filename  # Asegura que el nombre del archivo subido sea seguro
+from datetime import timedelta
+import os
+from flask import Flask, jsonify, render_template, request, flash, redirect, url_for, session
+from werkzeug.utils import secure_filename
+import mysql.connector
 from utils import obtener_incidencias_por_estado
-from flask_socketio import SocketIO
-# ==== IMPORTACIÓN DE FUNCIONES EXTERNAS (utils.py) ====
-# Estas funciones están definidas en otro archivo llamado utils.py
+from werkzeug.exceptions import BadRequest, InternalServerError
+# Funciones auxiliares necesarias
+
 from utils import (
     insertar_usuario,
     guardar_registro_academico,
@@ -27,7 +26,6 @@ from utils import (
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_segura'
-socketio = SocketIO(app)
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -161,17 +159,13 @@ def guardar_incidente():
     evidencia_file = request.files.get('evidencia')
     evidencia_url = None
 
-    print(f"Procesando guardar_incidente con datos: {nombre}, {motivo}, {fecha}, {hora}, {estado}, {evidencia_file}")
-
     if evidencia_file and allowed_file(evidencia_file.filename):
         filename = secure_filename(evidencia_file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         evidencia_file.save(filepath)
         evidencia_url = '/' + filepath.replace('\\', '/')
 
-    print("Llamando a guardar_registro_academico")
     exito = guardar_registro_academico(nombre, motivo, fecha, hora, estado, evidencia_url)
-    print(f"Resultado de guardar_registro_academico: exito={exito}")
     flash("Registro académico guardado exitosamente." if exito else "Error al guardar el registro académico.", "success" if exito else "danger")
 
     if 'usuario' in session and session['usuario'].get('correo') != 'admin@gmail.com':
@@ -247,8 +241,8 @@ def contar_incidencias_nuevas():
 
 @app.route("/api/incidentes")
 def api_incidentes():
-    cursor = None  # Inicializar cursor como None
-    conn = None    # Inicializar conn como None
+    cursor = None
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -370,48 +364,86 @@ def modal_editar_usuario(id):
     usuario = obtener_usuario_por_id(id)
     return render_template('modaledit_usuarios.html', usuario=usuario)
 
-@app.route('/actualizar_usuario', methods=['POST'])
-def actualizar_usuario():
-    datos = request.get_json()
-    resultado = actualizar_usuario_por_id(datos)
-    return jsonify({'success': resultado})
-
 
 from utils import obtener_instituciones  # Asegúrate de importar correctamente
 @app.route('/evidencias')
 def evidencias():
-    instituciones = obtener_instituciones()
+    instituciones = obtener_instituciones()  # Esto debe retornar los nombres desde `usuarios`
     return render_template('evidencias.html', instituciones=instituciones)
 
 
+import traceback  # AÑADE esto al inicio de tu archivo si no lo tienes
 
 @app.route('/api/evidencias', methods=['POST'])
 def api_evidencias():
     try:
         data = request.get_json()
-        institucion = data.get("institucion")
+        print("📩 JSON recibido:", data)
 
-        from utils import obtener_registros_filtrados_por_institucion
+        institucion = data.get("institucion")
+        print(f"🏫 Institución seleccionada: {institucion}")
+
         registros = obtener_registros_filtrados_por_institucion(institucion)
 
-        # Asegúrate de que el nombre de columnas en tu tabla `registro_academico` coincida
-        evidencias = []
-        for reg in registros:
-            evidencias.append({
-                "nombre_estudiante": reg["nombre_estudiante"],
-                "motivo": reg["motivo"],
-                "fecha": reg["fecha"],
-                "hora": reg["hora"],
-                "estado": reg["estado"],
-                "institucion": reg["institucion"],
-                "evidencia": reg["evidencia"]
-            })
+        # Convertir cualquier objeto tipo timedelta a string
+        for r in registros:
+            for key, value in r.items():
+                if isinstance(value, timedelta):
+                    r[key] = str(value)
 
-        return jsonify(evidencias)
+        print(f"✅ Total registros encontrados: {len(registros)}")
+        return jsonify(registros)
+
     except Exception as e:
+        print("❌ Error en /api/evidencias:")
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
+
+@app.route('/actualizar_usuario', methods=['POST'])
+def actualizar_usuario():
+    try:
+        usuario_id = request.form['id']
+        nombre = request.form['nombre']
+        apellido = request.form['apellido']
+        dni = request.form['dni']
+        telefono = request.form['telefono']
+        correo = request.form['correo_electronico']
+        institucion = request.form['institucion']
+        clave = request.form['clave']
+
+        actualizado = actualizar_usuario_por_id(
+            usuario_id, nombre, apellido, dni, telefono, correo, institucion, clave
+        )
+
+        return jsonify({'success': actualizado})
+    except Exception as e:
+        print(f"❌ Error en /actualizar_usuario: {e}")
+        return jsonify({'success': False})
+    
+    
+from utils import obtener_incidente_por_nombre
+@app.route('/api/incidente_por_nombre/<tipo>/<nombre>')
+def api_obtener_incidente_por_nombre(tipo, nombre):
+    print(f"📡 Buscando incidente para tipo='{tipo}', nombre='{nombre}'")
+    try:
+        incidente = obtener_incidente_por_nombre(tipo, nombre)
+        print("✅ Resultado:", incidente)
+        if incidente:
+            return jsonify(incidente)
+        else:
+            return jsonify({'error': 'No se encontró el incidente'}), 404
+    except Exception as e:
+        print("❌ Error al buscar incidente por nombre:", e)
+        return jsonify({'error': 'Error interno del servidor'}), 500
+
+# Esta ruta ya está bien en tu app.py, asegúrate que en tu utils.py también estés manejando correctamente el nombre con espacios.
+
+# También puedes añadir una codificación de espacios en tu JavaScript para que la URL no se corte:
+# Ejemplo: encodeURIComponent(nombre)
+
+
+
 if __name__ == '__main__':
-    #app.run(debug=True, port=5000)
-    socketio.run(app, debug=True)
+    app.run(debug=True, port=5000)

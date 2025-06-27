@@ -1,4 +1,3 @@
-// static/js/login.js
 // Función para mostrar u ocultar la contraseña
 function togglePassword() {
     const passwordInput = document.getElementById("clave");     // Input de contraseña
