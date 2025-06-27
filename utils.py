@@ -39,7 +39,7 @@ def insertar_usuario(nombre, apellido, dni, telefono, correo, institucion, clave
             conexion.close()
             return True
         except Error as e:
-            print("⚠️ Error al insertar usuario:", e)
+            print("⚠️ Error al insertar usuario: " + e.msg)
             return False
     else:
         print("❌ No se pudo conectar a la base de datos")
@@ -57,7 +57,7 @@ def verificar_credenciales(correo, clave):
         resultado = cursor.fetchone()
         return resultado is not None
     except mysql.connector.Error as e:
-        print("Error al verificar credenciales:", e)
+        print("Error al verificar credenciales: " + e.msg)
         return False
     finally:
         cursor.close()
@@ -299,7 +299,7 @@ def obtener_todos_los_usuarios():
             resultados = cursor.fetchall()
             return resultados
         except Error as e:
-            print("❌ Error al obtener usuarios:", e)
+            print("❌ Error al obtener usuarios: " + e.msg)
         finally:
             cursor.close()
             conexion.close()
@@ -381,7 +381,7 @@ def obtener_instituciones():
         resultados = cursor.fetchall()
         return resultados
     except Exception as e:
-        print("Error al obtener instituciones:", e)
+        print("Error al obtener instituciones: " + e.msg)
         return []
     finally:
         cursor.close()
@@ -407,7 +407,7 @@ def obtener_registros_filtrados_por_institucion(institucion):
                 """)
             return cursor.fetchall()
         except Error as e:
-            print("❌ Error al obtener evidencias filtradas:", e)
+            print("❌ Error al obtener evidencias filtradas: " + e.msg)
         finally:
             cursor.close()
             conexion.close()
