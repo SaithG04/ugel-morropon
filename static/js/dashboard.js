@@ -1,3 +1,4 @@
+// static/js/dashboard.js
 // Espera a que todo el DOM esté cargado antes de ejecutar funciones
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -174,11 +175,11 @@ function filtrarPorEstado() {
         return;
     }
 
-   const mapaEstados = {
-    "pendientes": "Pendiente",
-    "en_proceso": "En proceso",
-    "resueltos": "Resuelto" // ← Debe ser "Resueltos" (con S)
-};
+    const mapaEstados = {
+        "pendientes": "Pendiente",
+        "en_proceso": "En proceso",
+        "resueltos": "Resuelto" // ← Debe ser "Resueltos" (con S)
+    };
 
     const estado = mapaEstados[estadoSeleccionado] || "";
 
@@ -187,32 +188,32 @@ function filtrarPorEstado() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado })
     })
-  .then(async res => {
-    if (res.status === 404) {
-        contenedor.innerHTML = `
+        .then(async res => {
+            if (res.status === 404) {
+                contenedor.innerHTML = `
             <div class='alert alert-warning'>
                 <i class="bi bi-exclamation-circle"></i> No se encontraron registros en este estado.
             </div>`;
-        return [];
-    }
+                return [];
+            }
 
-    if (!res.ok) {
-        let errorMsg = `Error ${res.status}`;
-        try {
-            const errorData = await res.json();
-            errorMsg += ` - ${errorData.error || "Mensaje no disponible"}`;
-        } catch {
-            errorMsg += " - No se pudo interpretar el mensaje de error";
-        }
-        throw new Error(errorMsg);
-    }
+            if (!res.ok) {
+                let errorMsg = `Error ${res.status}`;
+                try {
+                    const errorData = await res.json();
+                    errorMsg += ` - ${errorData.error || "Mensaje no disponible"}`;
+                } catch {
+                    errorMsg += " - No se pudo interpretar el mensaje de error";
+                }
+                throw new Error(errorMsg);
+            }
 
-    return res.json();
-})
-.then(data => {
-    if (!data || data.length === 0) return; // Ya se mostró mensaje de no encontrados si era 404
+            return res.json();
+        })
+        .then(data => {
+            if (!data || data.length === 0) return; // Ya se mostró mensaje de no encontrados si era 404
 
-    const html = data.map(item => `
+            const html = data.map(item => `
         <li class="list-group-item d-flex justify-content-between align-items-start flex-column">
             <div><strong>Institución:</strong> ${item.institucion}</div>
             <div><strong>Registrado por:</strong> ${item.registrado_por}</div>
@@ -222,16 +223,16 @@ function filtrarPorEstado() {
         </li>
     `).join("");
 
-    contenedor.innerHTML = `<ul class='list-group'>${html}</ul>`;
-})
-    .catch(err => {
-        const timestamp = new Date().toLocaleString();
-        contenedor.innerHTML = `
+            contenedor.innerHTML = `<ul class='list-group'>${html}</ul>`;
+        })
+        .catch(err => {
+            const timestamp = new Date().toLocaleString();
+            contenedor.innerHTML = `
             <div class='alert alert-danger'>
                 <strong><i class="bi bi-bug"></i> Se produjo un error</strong><br>
                 <small><code>${err.message}</code></small><br>
                 <span class="text-muted">(${timestamp})</span>
             </div>`;
-        console.error("🧯 Detalle del error al filtrar por estado:", err);
-    });
+            console.error("🧯 Detalle del error al filtrar por estado:", err);
+        });
 }

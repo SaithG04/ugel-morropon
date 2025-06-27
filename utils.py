@@ -1,3 +1,4 @@
+# utils.py
 import datetime
 from flask import session
 import mysql.connector
@@ -11,7 +12,8 @@ def get_db_connection():
             host='localhost',
             user='root',
             password='',
-            database='ugel'
+            database='ugel',
+            port=3375
         )
         if connection.is_connected():
             return connection

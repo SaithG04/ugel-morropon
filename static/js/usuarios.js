@@ -1,3 +1,4 @@
+// static/js/usuarios.js
 // Espera a que todo el contenido del DOM se haya cargado antes de ejecutar el código
 document.addEventListener('DOMContentLoaded', () => {
 

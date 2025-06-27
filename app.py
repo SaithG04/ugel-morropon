@@ -1,9 +1,11 @@
+# app.py
 # ==== IMPORTACIÓN DE MÓDULOS ====
 import os  # Permite trabajar con archivos, rutas y variables de entorno
 from flask import Flask, jsonify, render_template, request, flash, redirect, session, url_for  # Funciones del framework Flask
-import mysql  # Cliente para conectar a MySQL
+import mysql.connector # Cliente para conectar a MySQL
 from werkzeug.utils import secure_filename  # Asegura que el nombre del archivo subido sea seguro
 from utils import obtener_incidencias_por_estado
+from flask_socketio import SocketIO
 # ==== IMPORTACIÓN DE FUNCIONES EXTERNAS (utils.py) ====
 # Estas funciones están definidas en otro archivo llamado utils.py
 from utils import (
@@ -25,6 +27,7 @@ from utils import (
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_segura'
+socketio = SocketIO(app)
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -158,13 +161,17 @@ def guardar_incidente():
     evidencia_file = request.files.get('evidencia')
     evidencia_url = None
 
+    print(f"Procesando guardar_incidente con datos: {nombre}, {motivo}, {fecha}, {hora}, {estado}, {evidencia_file}")
+
     if evidencia_file and allowed_file(evidencia_file.filename):
         filename = secure_filename(evidencia_file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         evidencia_file.save(filepath)
         evidencia_url = '/' + filepath.replace('\\', '/')
 
+    print("Llamando a guardar_registro_academico")
     exito = guardar_registro_academico(nombre, motivo, fecha, hora, estado, evidencia_url)
+    print(f"Resultado de guardar_registro_academico: exito={exito}")
     flash("Registro académico guardado exitosamente." if exito else "Error al guardar el registro académico.", "success" if exito else "danger")
 
     if 'usuario' in session and session['usuario'].get('correo') != 'admin@gmail.com':
@@ -240,6 +247,8 @@ def contar_incidencias_nuevas():
 
 @app.route("/api/incidentes")
 def api_incidentes():
+    cursor = None  # Inicializar cursor como None
+    conn = None    # Inicializar conn como None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -249,8 +258,10 @@ def api_incidentes():
     except mysql.connector.Error as e:
         return jsonify({'error': str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 @app.route("/api/incidentes/<int:id>/estado", methods=["POST"])
 def actualizar_estado(id):
@@ -402,4 +413,5 @@ def api_evidencias():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    #app.run(debug=True, port=5000)
+    socketio.run(app, debug=True)

@@ -1,0 +1,9 @@
+.venv/
+venv-linux/
+venv/
+__pycache__
+test/__pycache__
+.pytest_cache
+htmlcov
+.coverage
+desktop.ini
