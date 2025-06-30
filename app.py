@@ -3,7 +3,7 @@ import os
 from flask import Flask, jsonify, render_template, request, flash, redirect, url_for, session
 from werkzeug.utils import secure_filename
 import mysql.connector
-from utils import obtener_incidencias_por_estado
+from utils import actualizar_incidencia_por_nombre, obtener_incidencias_por_estado, obtener_registros_academico, obtener_registros_infraestructura
 from werkzeug.exceptions import BadRequest, InternalServerError
 # Funciones auxiliares necesarias
 
@@ -19,7 +19,7 @@ from utils import (
     eliminar_usuario_por_id,
     obtener_usuario_por_id,
     actualizar_usuario_por_id,
-        obtener_registros_filtrados_por_institucion  # ✅ <--- Asegúrate de tener esta línea
+        obtener_todas_las_evidencias_por_institucion  # ✅ <--- Asegúrate de tener esta línea
 
     
 )
@@ -85,19 +85,63 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+
 @app.route('/dashboard')
 def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
+
+    incidentes = obtener_registros_infraestructura()
+    academicos = obtener_registros_academico()
     metricas = obtener_metricas_dashboard()
-    return render_template('dashboard.html', metricas=metricas)
+
+    return render_template('dashboard.html', incidentes=incidentes, academicos=academicos, metricas=metricas)
+
+from utils import obtener_registros_academico
 
 @app.route('/dashboard_colegios')
 def dashboard_colegios():
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    metricas = obtener_metricas_dashboard()
-    return render_template('dashboard_colegios.html', metricas=metricas)
+
+    usuario_id = session['usuario']['id']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT 
+                u.institucion,
+                r.descripcion_problema AS descripcion,
+                r.estado,
+                r.fecha_registro AS fecha,
+                u.correo_electronico AS correo,
+                u.telefono AS telefono
+            FROM registro_infraestructura r
+            JOIN usuarios u ON r.usuario_id = u.id
+            WHERE r.usuario_id = %s
+            ORDER BY r.fecha_registro DESC
+        """, (usuario_id,))
+        
+        incidentes = cursor.fetchall()
+        registros_academicos = obtener_registros_academico(usuario_id)
+        metricas = obtener_metricas_dashboard()
+
+        return render_template(
+            'dashboard_colegios.html',
+            incidentes=incidentes,
+            registros_academicos=registros_academicos,
+            metricas=metricas
+        )
+
+    except Exception as e:
+        print("❌ Error al cargar el dashboard_colegios:", e)
+        return render_template('dashboard_colegios.html', incidentes=[], registros_academicos=[], metricas={})
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.route('/api/metricas')
 def api_metricas():
@@ -241,8 +285,6 @@ def contar_incidencias_nuevas():
 
 @app.route("/api/incidentes")
 def api_incidentes():
-    cursor = None
-    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -252,10 +294,8 @@ def api_incidentes():
     except mysql.connector.Error as e:
         return jsonify({'error': str(e)}), 500
     finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        cursor.close()
+        conn.close()
 
 @app.route("/api/incidentes/<int:id>/estado", methods=["POST"])
 def actualizar_estado(id):
@@ -383,9 +423,9 @@ def api_evidencias():
         institucion = data.get("institucion")
         print(f"🏫 Institución seleccionada: {institucion}")
 
-        registros = obtener_registros_filtrados_por_institucion(institucion)
+        registros = obtener_todas_las_evidencias_por_institucion(institucion)
 
-        # Convertir cualquier objeto tipo timedelta a string
+        # Asegura compatibilidad con JSON (por si hay timedelta u otros tipos no serializables)
         for r in registros:
             for key, value in r.items():
                 if isinstance(value, timedelta):
@@ -398,6 +438,7 @@ def api_evidencias():
         print("❌ Error en /api/evidencias:")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 
 
@@ -442,6 +483,43 @@ def api_obtener_incidente_por_nombre(tipo, nombre):
 
 # También puedes añadir una codificación de espacios en tu JavaScript para que la URL no se corte:
 # Ejemplo: encodeURIComponent(nombre)
+
+# Ejemplo de Python Flask
+
+
+from utils import actualizar_incidencia_por_nombre
+
+@app.route("/api/actualizar_incidente_por_nombre/<institucion>", methods=["PUT"])
+def actualizar_incidente_por_nombre_api(institucion):
+    try:
+        datos = request.get_json()
+
+        tipo = datos.get("tipo")
+        estado = datos.get("estado")
+        descripcion = datos.get("descripcion")
+        correo = datos.get("correo")
+        telefono = datos.get("telefono")
+
+        if not all([tipo, estado, descripcion, correo, telefono]):
+            return jsonify({"error": "Faltan datos para actualizar"}), 400
+
+        resultado = actualizar_incidencia_por_nombre(
+            institucion=institucion,
+            tipo=tipo,
+            estado=estado,
+            descripcion=descripcion,
+            correo=correo,
+            telefono=telefono
+        )
+
+        if resultado:
+            return jsonify({"mensaje": "Incidente actualizado correctamente"}), 200
+        else:
+            return jsonify({"error": "No se pudo actualizar el incidente"}), 400
+
+    except Exception as e:
+        print(f"❌ Error en el endpoint actualizar_incidente_por_nombre: {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
 
 
