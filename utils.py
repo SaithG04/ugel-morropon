@@ -460,3 +460,181 @@ def obtener_incidente_por_nombre(tipo, nombre_institucion):
     finally:
         cursor.close()
         conexion.close()
+def obtener_todas_las_evidencias_por_institucion(institucion=None):
+    conexion = get_db_connection()
+    if not conexion:
+        return []
+
+    try:
+        cursor = conexion.cursor(dictionary=True)
+        resultados = []
+
+        # Evidencias académicas
+        if institucion:
+            cursor.execute("""
+                SELECT 
+                    'Académico' AS tipo,
+                    r.nombre_estudiante,
+                    r.motivo,
+                    r.fecha,
+                    r.hora,
+                    r.estado,
+                    u.institucion,
+                    r.evidencia
+                FROM registro_academico r
+                JOIN usuarios u ON r.usuario_id = u.id
+                WHERE u.institucion = %s
+            """, (institucion,))
+        else:
+            cursor.execute("""
+                SELECT 
+                    'Académico' AS tipo,
+                    r.nombre_estudiante,
+                    r.motivo,
+                    r.fecha,
+                    r.hora,
+                    r.estado,
+                    u.institucion,
+                    r.evidencia
+                FROM registro_academico r
+                JOIN usuarios u ON r.usuario_id = u.id
+            """)
+        resultados += cursor.fetchall()
+
+        # Evidencias de infraestructura
+        if institucion:
+            cursor.execute("""
+                SELECT 
+                    'Infraestructura' AS tipo,
+                    '' AS nombre_estudiante,
+                    r.descripcion_problema AS motivo,
+                    DATE(r.fecha_registro) AS fecha,
+                    TIME(r.fecha_registro) AS hora,
+                    r.estado,
+                    u.institucion,
+                    r.imagen_problema AS evidencia
+                FROM registro_infraestructura r
+                JOIN usuarios u ON r.usuario_id = u.id
+                WHERE u.institucion = %s
+            """, (institucion,))
+        else:
+            cursor.execute("""
+                SELECT 
+                    'Infraestructura' AS tipo,
+                    '' AS nombre_estudiante,
+                    r.descripcion_problema AS motivo,
+                    DATE(r.fecha_registro) AS fecha,
+                    TIME(r.fecha_registro) AS hora,
+                    r.estado,
+                    u.institucion,
+                    r.imagen_problema AS evidencia
+                FROM registro_infraestructura r
+                JOIN usuarios u ON r.usuario_id = u.id
+            """)
+        resultados += cursor.fetchall()
+
+        return resultados
+
+    except Exception as e:
+        print("❌ Error al obtener todas las evidencias:", e)
+        return []
+
+    finally:
+        cursor.close()
+        conexion.close()
+def actualizar_incidencia_por_nombre(institucion, tipo, estado, descripcion, correo, telefono):
+    conexion = get_db_connection()
+    if not conexion:
+        print("❌ Error: No se pudo conectar a la base de datos")
+        return False
+
+    try:
+        cursor = conexion.cursor()
+
+        # Obtener el ID del usuario mediante el correo electrónico
+        cursor.execute("SELECT id FROM usuarios WHERE correo_electronico = %s", (correo,))
+        resultado = cursor.fetchone()
+        if not resultado:
+            print("❌ Error: No se encontró el usuario con ese correo")
+            return False
+
+        usuario_id = resultado[0]
+
+        # Buscar el incidente más reciente por institución (vía relación con usuario_id)
+        if tipo.lower() == 'infraestructura':
+            cursor.execute("""
+                SELECT ri.id FROM registro_infraestructura ri
+                JOIN usuarios u ON ri.usuario_id = u.id
+                WHERE u.institucion = %s
+                ORDER BY ri.fecha_registro DESC
+                LIMIT 1
+            """, (institucion,))
+        else:  # académico
+            cursor.execute("""
+                SELECT ra.id FROM registro_academico ra
+                JOIN usuarios u ON ra.usuario_id = u.id
+                WHERE u.institucion = %s
+                ORDER BY ra.fecha_registro DESC
+                LIMIT 1
+            """, (institucion,))
+
+        incidente = cursor.fetchone()
+        if not incidente:
+            print("❌ Error: No se encontró el incidente con esa institución")
+            return False
+
+        incidente_id = incidente[0]
+
+        # Actualizar incidente
+        if tipo.lower() == 'infraestructura':
+            sql = """
+                UPDATE registro_infraestructura
+                SET estado = %s,
+                    descripcion_problema = %s,
+                    usuario_id = %s
+                WHERE id = %s
+            """
+        else:
+            sql = """
+                UPDATE registro_academico
+                SET estado = %s,
+                    motivo = %s,
+                    usuario_id = %s
+                WHERE id = %s
+            """
+
+        cursor.execute(sql, (estado, descripcion, usuario_id, incidente_id))
+        conexion.commit()
+        print("✅ Incidente actualizado correctamente.")
+        return True
+
+    except Error as e:
+        print(f"❌ Error al actualizar incidente: {e}")
+        return False
+def obtener_registros_infraestructura():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM registro_infraestructura ORDER BY fecha_registro DESC")
+    resultados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return resultados
+   
+def obtener_registros_academico(usuario_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                nombre_estudiante, motivo, fecha, hora, estado, evidencia_url
+            FROM registro_academico
+            WHERE usuario_id = %s
+            ORDER BY fecha DESC
+        """, (usuario_id,))
+        return cursor.fetchall()
+    except Exception as e:
+        print("❌ Error al obtener registros académicos:", e)
+        return []
+    finally:
+        cursor.close()
+        conn.close()

@@ -417,8 +417,8 @@ def test_obtener_registros_infraestructura_error(mock_db_connection):
     mock_cursor.execute.side_effect = Error("Database error")
     with patch('builtins.print') as mocked_print:
         result = obtener_registros_infraestructura()
-        assert result == []
-        mocked_print.assert_called_with("❌ Error al obtener registros de infraestructura: Database error")
+        assert result == None
+        mocked_print.assert_called_with("Database error")
 
 def test_obtener_metricas_dashboard_success(mock_db_connection):
     """

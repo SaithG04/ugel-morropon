@@ -3,7 +3,7 @@ import os
 from flask import Flask, jsonify, render_template, request, flash, redirect, url_for, session
 from werkzeug.utils import secure_filename
 import mysql.connector
-from utils import actualizar_incidencia_por_nombre, obtener_incidencias_por_estado, obtener_registros_academico, obtener_registros_infraestructura
+from utils import obtener_registros_filtrados_por_institucion, actualizar_incidencia_por_nombre, obtener_incidencias_por_estado, obtener_registros_academico, obtener_registros_infraestructura
 from werkzeug.exceptions import BadRequest, InternalServerError
 # Funciones auxiliares necesarias
 
@@ -92,10 +92,9 @@ def dashboard():
         return redirect(url_for('login'))
 
     incidentes = obtener_registros_infraestructura()
-    academicos = obtener_registros_academico()
     metricas = obtener_metricas_dashboard()
 
-    return render_template('dashboard.html', incidentes=incidentes, academicos=academicos, metricas=metricas)
+    return render_template('dashboard.html', incidentes=incidentes, metricas=metricas)
 
 from utils import obtener_registros_academico
 
@@ -285,6 +284,10 @@ def contar_incidencias_nuevas():
 
 @app.route("/api/incidentes")
 def api_incidentes():
+
+    conn = None
+    cursor = None
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -294,8 +297,10 @@ def api_incidentes():
     except mysql.connector.Error as e:
         return jsonify({'error': str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 @app.route("/api/incidentes/<int:id>/estado", methods=["POST"])
 def actualizar_estado(id):
