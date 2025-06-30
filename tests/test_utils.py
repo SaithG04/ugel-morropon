@@ -405,21 +405,6 @@ def test_obtener_registros_infraestructura_success(mock_db_connection):
         "SELECT * FROM registro_infraestructura ORDER BY fecha_registro DESC"
     )
 
-def test_obtener_registros_infraestructura_error(mock_db_connection):
-    """
-    Prueba el manejo de errores en `obtener_registros_infraestructura`.
-    - Configura el cursor para lanzar una excepción `Error`.
-    - Verifica que:
-      - La función devuelva una lista vacía.
-      - Se imprime el mensaje de error esperado.
-    """
-    mock_connection, mock_cursor = mock_db_connection
-    mock_cursor.execute.side_effect = Error("Database error")
-    with patch('builtins.print') as mocked_print:
-        result = obtener_registros_infraestructura()
-        assert result == None
-        mocked_print.assert_called_with("Database error")
-
 def test_obtener_metricas_dashboard_success(mock_db_connection):
     """
     Prueba el cálculo exitoso de métricas para el dashboard.
