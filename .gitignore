@@ -10,3 +10,4 @@ desktop.ini
 static/uploads/*.jpg
 static/uploads/*.png
 static/uploads/*.jpeg
+.env

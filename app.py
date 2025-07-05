@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import mysql.connector
 from utils import obtener_registros_filtrados_por_institucion, actualizar_incidencia_por_nombre, obtener_incidencias_por_estado, obtener_registros_academico, obtener_registros_infraestructura
 from werkzeug.exceptions import BadRequest, InternalServerError
+from dotenv import load_dotenv
 # Funciones auxiliares necesarias
 
 from utils import (
@@ -26,6 +27,7 @@ from utils import (
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_segura'
+load_dotenv()
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -41,10 +43,11 @@ def allowed_file(filename):
 
 def get_db_connection():
     return mysql.connector.connect(
-        user=os.getenv('DB_USER', 'root'),
-        password=os.getenv('DB_PASSWORD', ''),
-        host=os.getenv('DB_HOST', 'localhost'),
-        database=os.getenv('DB_NAME', 'ugel')
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        host=os.getenv('DB_HOST'),
+        database=os.getenv('DB_NAME'),
+        port=os.getenv('DB_PORT')
     )
 
 @app.route('/', methods=['GET', 'POST'])

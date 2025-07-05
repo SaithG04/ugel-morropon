@@ -2,17 +2,22 @@ import datetime
 from flask import session
 import mysql.connector
 from mysql.connector import Error
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ---------------------- CONEXIÓN A LA BASE DE DATOS ----------------------
 
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='',
-            database='ugel'
-        )
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            host=os.getenv('DB_HOST'),
+            database=os.getenv('DB_NAME'),
+            port=os.getenv('DB_PORT')
+    )
         if connection.is_connected():
             return connection
     except Error as e:

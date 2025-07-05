@@ -21,6 +21,7 @@ CREATE TABLE registro_academico (
     evidencia VARCHAR(255),
     usuario_id INT NOT NULL,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    comentarios TEXT,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -35,6 +36,7 @@ CREATE TABLE registro_infraestructura (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     usuario_id INT NOT NULL,
     tipo VARCHAR(100),
+    comentarios TEXT,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
