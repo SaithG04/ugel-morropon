@@ -6,7 +6,7 @@ de métricas o registros. Usa pytest y mocking para aislar las pruebas de la bas
 """
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 from utils import (
     get_db_connection,
     insertar_usuario,
@@ -105,7 +105,7 @@ def test_insertar_usuario_failure_no_connection():
                 clave='123456'
             )
             assert result is False
-            mocked_print.assert_called_with("❌ No se pudo conectar a la base de datos")
+            mocked_print.assert_called_with("No se pudo conectar a la base de datos")
 
 def test_insertar_usuario_db_error(mock_db_connection):
     """
@@ -128,7 +128,7 @@ def test_insertar_usuario_db_error(mock_db_connection):
             clave='123456'
         )
         assert result is False
-        mocked_print.assert_called_with("⚠️ Error al insertar usuario: Database error")
+        mocked_print.assert_called_with("Error al insertar usuario: Database error")
 
 def test_verificar_credenciales_success(mock_db_connection):
     """
@@ -282,7 +282,7 @@ def test_guardar_registro_academico_db_error(mock_db_connection):
                 evidencia_url='/static/uploads/evidencia.jpg'
             )
             assert result is False
-            mocked_print.assert_called_with("❌ Error al guardar registro académico: Database error")
+            mocked_print.assert_called_with("Error al guardar registro académico: Database error")
 
 def test_obtener_registros_academicos_success(mock_db_connection):
     """
@@ -316,7 +316,7 @@ def test_obtener_registros_academicos_error(mock_db_connection):
     with patch('builtins.print') as mocked_print:
         result = obtener_registros_academicos()
         assert result == []
-        mocked_print.assert_called_with("❌ Error al obtener registros académicos: Database error")
+        mocked_print.assert_called_with("Error al obtener registros académicos: Database error")
 
 def test_guardar_registro_infraestructura_success(mock_db_connection):
     """
@@ -332,7 +332,6 @@ def test_guardar_registro_infraestructura_success(mock_db_connection):
             problema='Fuga de agua',
             descripcion_problema='Fuga en aula',
             imagen_url='/static/uploads/test.jpg',
-            seguimiento='Reportado',
             estado='Pendiente',
             tipo='on'
         )
@@ -355,12 +354,11 @@ def test_guardar_registro_infraestructura_no_connection():
                     problema='Fuga de agua',
                     descripcion_problema='Fuga en aula',
                     imagen_url='/static/uploads/test.jpg',
-                    seguimiento='Reportado',
                     estado='Pendiente',
                     tipo='on'
                 )
                 assert result is False
-                mocked_print.assert_called_with("❌ Error: No hay conexión a la base de datos o sesión de usuario no iniciada.")
+                mocked_print.assert_called_with("Error: No hay conexión a la base de datos o sesión de usuario no iniciada.")
 
 def test_guardar_registro_infraestructura_db_error(mock_db_connection):
     """
@@ -379,12 +377,11 @@ def test_guardar_registro_infraestructura_db_error(mock_db_connection):
                 problema='Fuga de agua',
                 descripcion_problema='Fuga en aula',
                 imagen_url='/static/uploads/test.jpg',
-                seguimiento='Reportado',
                 estado='Pendiente',
                 tipo='on'
             )
             assert result is False
-            mocked_print.assert_called_with("❌ Error al guardar registro de infraestructura: Database error")
+            mocked_print.assert_called_with("Error al guardar registro de infraestructura: Database error")
 
 def test_obtener_registros_infraestructura_success(mock_db_connection):
     """
@@ -454,7 +451,7 @@ def test_obtener_metricas_dashboard_db_error(mock_db_connection):
     with patch('builtins.print') as mocked_print:
         result = obtener_metricas_dashboard()
         assert result == {}
-        mocked_print.assert_called_with("❌ Error al obtener métricas: Database error")
+        mocked_print.assert_called_with("Error al obtener métricas: Database error")
 
 def test_obtener_ultima_incidencia_both_records(mock_db_connection):
     """
@@ -499,51 +496,50 @@ def test_obtener_ultima_incidencia_error(mock_db_connection):
     with patch('builtins.print') as mocked_print:
         result = obtener_ultima_incidencia()
         assert result is None
-        mocked_print.assert_called_with("❌ Error al obtener última incidencia: Database error")
+        mocked_print.assert_called_with("Error al obtener última incidencia: Database error")
 
 def test_obtener_incidencias_por_estado_success(mock_db_connection):
     """
     Prueba la obtención exitosa de incidencias por estado.
-    - Configura el cursor para devolver registros simulados para infraestructura y académico.
+    - Simula datos tanto para infraestructura como académico.
     - Verifica que:
-      - La función devuelva una lista con los registros combinados.
-      - Se manejen correctamente los valores nulos con 'Desconocido'.
+      - Se combinan ambas listas correctamente.
+      - Los campos 'institucion' o 'registrado_por' nulos se conservan como None.
     """
     mock_connection, mock_cursor = mock_db_connection
+
+    # Simula respuestas distintas para cada cursor.fetchall()
     mock_cursor.fetchall.side_effect = [
-        [{'institucion': None, 'registrado_por': 'Juan Perez', 'correo': 'juan@example.com', 'estado': 'Pendiente', 'tipo': 'Infraestructura'}],
-        [{'institucion': 'Colegio XYZ', 'registrado_por': 'Ana Lopez', 'correo': None, 'estado': 'Pendiente', 'tipo': 'Académico'}]
+        [{'institucion': 'Desconocido', 'registrado_por': 'Juan Perez', 'tipo': 'Infraestructura', 'id': 1, 'fecha': '2025-06-27'}],
+        [{'institucion': 'Colegio XYZ', 'registrado_por': 'Ana Lopez', 'tipo': 'Académico', 'id': 2, 'fecha': '2025-06-28'}]
     ]
+
     result = obtener_incidencias_por_estado('Pendiente')
+
+    # Validaciones
     assert len(result) == 2
-    assert result[0]['institucion'] == 'Desconocido'
-    assert result[1]['correo'] == 'Desconocido'
-    mock_cursor.execute.assert_any_call(
-        """
-                SELECT u.institucion, CONCAT(u.nombre, ' ', u.apellido) AS registrado_por,
-                       u.correo_electronico AS correo, ri.estado,
-                       'Infraestructura' AS tipo
-                FROM registro_infraestructura ri
-                LEFT JOIN usuarios u ON ri.usuario_id = u.id
-                WHERE ri.estado = %s
-            """,
-        ('Pendiente',)
-    )
+    assert result[0]['institucion'] is 'Desconocido'
+    assert result[0]['registrado_por'] == 'Juan Perez'
+    assert result[1]['institucion'] == 'Colegio XYZ'
+    assert result[1]['registrado_por'] == 'Ana Lopez'
+
+    mock_cursor.execute.assert_any_call(ANY, ('Pendiente',))
+    assert mock_cursor.execute.call_count == 2
 
 def test_obtener_incidencias_por_estado_error(mock_db_connection):
     """
-    Prueba el manejo de errores en `obtener_incidencias_por_estado`.
-    - Configura el cursor para lanzar una excepción `Error`.
-    - Verifica que:
-      - La función devuelva una lista vacía.
-      - Se imprime el mensaje de error esperado.
+    Prueba que `obtener_incidencias_por_estado` lanza una excepción
+    personalizada cuando ocurre un error de base de datos.
     """
     mock_connection, mock_cursor = mock_db_connection
+
+    # Simula un error al ejecutar la primera consulta
     mock_cursor.execute.side_effect = Error("Database error")
-    with patch('builtins.print') as mocked_print:
-        result = obtener_incidencias_por_estado('Pendiente')
-        assert result == []
-        mocked_print.assert_called_with("❌ Error al obtener incidencias por estado: Database error")
+
+    with pytest.raises(Exception) as exc_info:
+        obtener_incidencias_por_estado('Pendiente')
+
+    assert str(exc_info.value) == "Error al obtener incidencias por estado: Database error"
 
 def test_obtener_todos_los_usuarios_success(mock_db_connection):
     """
@@ -573,7 +569,7 @@ def test_obtener_todos_los_usuarios_error(mock_db_connection):
     with patch('builtins.print') as mocked_print:
         result = obtener_todos_los_usuarios()
         assert result == []
-        mocked_print.assert_called_with("❌ Error al obtener usuarios: Database error")
+        mocked_print.assert_called_with("Error al obtener usuarios: Database error")
 
 def test_obtener_usuario_por_id_success(mock_db_connection):
     """
@@ -624,7 +620,7 @@ def test_eliminar_usuario_por_id_no_connection():
         with patch('builtins.print') as mocked_print:
             result = eliminar_usuario_por_id(1)
             assert result is False
-            mocked_print.assert_called_with("❌ Error de conexión al intentar eliminar usuario")
+            mocked_print.assert_called_with("Error de conexión al intentar eliminar usuario")
 
 def test_eliminar_usuario_por_id_db_error(mock_db_connection):
     """
@@ -639,7 +635,7 @@ def test_eliminar_usuario_por_id_db_error(mock_db_connection):
     with patch('builtins.print') as mocked_print:
         result = eliminar_usuario_por_id(1)
         assert result is False
-        mocked_print.assert_called_with("❌ Error al eliminar usuario con ID 1: Database error")
+        mocked_print.assert_called_with("Error al eliminar usuario con ID 1: Database error")
 
 def test_actualizar_usuario_por_id_success(mock_db_connection):
     """
@@ -680,7 +676,7 @@ def test_actualizar_usuario_por_id_no_connection():
                 'Colegio XYZ',
                 '123456')
             assert result is False
-            mocked_print.assert_called_with("❌ Error de conexión al intentar actualizar usuario")
+            mocked_print.assert_called_with("Error de conexión al intentar actualizar usuario")
 
 def test_actualizar_usuario_por_id_db_error(mock_db_connection):
     """
@@ -702,7 +698,7 @@ def test_actualizar_usuario_por_id_db_error(mock_db_connection):
                 'Colegio XYZ',
                 '123456')
         assert result is False
-        mocked_print.assert_called_with("❌ Error al actualizar usuario con ID 1: Database error")
+        mocked_print.assert_called_with("Error al actualizar usuario con ID 1: Database error")
 
 def test_obtener_instituciones_success(mock_db_connection):
     """

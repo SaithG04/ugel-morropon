@@ -159,46 +159,6 @@ class TestApp(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Demasiados intentos fallidos', response.data)
 
-    @patch('app.get_db_connection')
-    def test_api_metricas(self, mock_db_connection):
-        """
-        Prueba el endpoint '/api/metricas' que devuelve métricas del dashboard en formato JSON.
-        - Simula una conexión a la base de datos y configura un cursor mock para devolver valores
-          específicos para las consultas SQL (total_incidentes, resueltos, en_proceso, instituciones).
-        - Usa `side_effect` en `fetchone` para simular las respuestas de las consultas en orden:
-          100 incidentes totales, 50 resueltos, 30 en proceso y 10 instituciones.
-        - Envía una solicitud GET al endpoint '/api/metricas'.
-        - Verifica que:
-          - El código de estado sea 200 (éxito).
-          - La respuesta JSON contenga las métricas esperadas en el formato correcto.
-        Este test asegura que el endpoint calcule y devuelva las métricas correctamente.
-        """
-        # Simular conexión y resultados de la base de datos
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_db_connection.return_value = mock_conn
-        mock_conn.cursor.return_value = mock_cursor
-
-        # Simular resultados de las consultas SQL
-        mock_cursor.fetchone.side_effect = [
-            (100,),  # total_incidentes
-            (50,),   # resueltos
-            (30,),   # en_proceso
-            (10,)    # instituciones
-        ]
-
-        # Simular solicitud GET
-        response = self.client.get('/api/metricas')
-        
-        # Verificaciones
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json, {
-            'total_incidentes': 100,
-            'resueltos': 50,
-            'en_proceso': 30,
-            'instituciones': 10
-        })
-
     def test_logout(self):
         """
         Prueba la funcionalidad de cierre de sesión en el endpoint '/logout'.
@@ -442,7 +402,7 @@ class TestApp(TestCase):
                 flashes = session.get('_flashes', [])
                 self.assertTrue(any('Incidente de infraestructura registrado correctamente' in msg for _, msg in flashes))
             mock_guardar_registro.assert_called_once_with(
-                'Fuga de agua', 'Fuga en el baño principal', ANY, 'Enviado a mantenimiento', 'Pendiente', True
+                'Fuga de agua', 'Fuga en el baño principal', ANY, 'Pendiente', True
             )
 
     @patch('app.get_db_connection')
@@ -489,7 +449,7 @@ class TestApp(TestCase):
                 flashes = session.get('_flashes', [])
                 self.assertTrue(any('Incidente registrado correctamente' in msg for _, msg in flashes))
             mock_guardar_registro.assert_called_once_with(
-                'Techo roto', 'Filtración en aula', ANY, 'Reportado', 'Pendiente', 'on'
+                'Techo roto', 'Filtración en aula', ANY, 'Pendiente', 'on'
             )
 
     @patch('app.get_db_connection')

@@ -1,0 +1,17 @@
+/* static/css/incidente.css */
+.metric-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.metric-card .card-body {
+  padding: 20px;
+}
+.metric-card p {
+  margin-bottom: 5px;
+  color: #6c757d;
+}
+.metric-card h4 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
