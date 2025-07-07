@@ -11,3 +11,5 @@ static/uploads/*.jpg
 static/uploads/*.png
 static/uploads/*.jpeg
 .env
+.idea
+*.zip

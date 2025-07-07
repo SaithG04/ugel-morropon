@@ -621,5 +621,5 @@ def obtener_incidente_por_id(id, tipo):
         conn.close()
 
 if __name__ == '__main__':
-    """Inicia la aplicación Flask en modo debug."""
+    # Solo para desarrollo
     app.run(debug=True, port=5000)
