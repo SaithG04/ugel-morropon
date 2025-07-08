@@ -72,10 +72,46 @@ function editarUsuario(id) {
       return res.text();
     })
     .then(html => {
-      document.getElementById("contenedor-modal-edicion").innerHTML = html;
+      // Crear contenedor si no existe
+      let contenedor = document.getElementById("contenedor-modal-edicion");
+      if (!contenedor) {
+        contenedor = document.createElement("div");
+        contenedor.id = "contenedor-modal-edicion";
+        document.body.appendChild(contenedor);
+      }
+      contenedor.innerHTML = html;
 
       const modal = new bootstrap.Modal(document.getElementById("modalEditarUsuario"));
       modal.show();
+
+      // Adjuntar event listener al formulario
+      const form = document.getElementById("formEditarUsuario");
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        fetch("/actualizar_usuario", {
+          method: "POST",
+          body: formData // Enviar FormData directamente
+        })
+          .then(res => {
+            if (!res.ok) throw new Error("Error al actualizar");
+            return res.json();
+          })
+          .then(resp => {
+            if (resp.success) {
+              modal.hide();
+              cargarUsuarios();
+              mostrarToast("✅ Usuario actualizado correctamente.");
+            } else {
+              alert("No se pudo actualizar el usuario.");
+            }
+          })
+          .catch(err => {
+            console.error("❌ Error al actualizar:", err);
+            alert("Hubo un error al actualizar el usuario.");
+          });
+      });
     })
     .catch(err => console.error("❌ Error al cargar modal de edición:", err));
 }
@@ -86,17 +122,17 @@ function editarUsuario(id) {
 const redirectURL = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQIRW5IsZOudQmVobxbJs4CcbYUIfFz-kmFg&s';
 
 window.addEventListener('contextmenu', e => {
-    e.preventDefault();
-    window.location.href = redirectURL;
+  e.preventDefault();
+  window.location.href = redirectURL;
 });
 
 window.addEventListener('keydown', e => {
-    if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
-        (e.ctrlKey && ['U', 'S', 'H', 'A', 'F'].includes(e.key.toUpperCase()))
-    ) {
-        e.preventDefault();
-        window.location.href = redirectURL;
-    }
+  if (
+    e.key === 'F12' ||
+    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+    (e.ctrlKey && ['U', 'S', 'H', 'A', 'F'].includes(e.key.toUpperCase()))
+  ) {
+    e.preventDefault();
+    window.location.href = redirectURL;
+  }
 });
